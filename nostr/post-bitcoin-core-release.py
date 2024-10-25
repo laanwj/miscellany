@@ -83,7 +83,7 @@ def main():
 
     # replace download links
     newspec = '- 🌐 <\\1>\n' + \
-              '- 🧲 <' + metadata['optional_magnetlink'].replace('\\', '\\\\') + '>'
+              '- 🧲 [Magnet link](' + metadata['optional_magnetlink'].replace('\\', '\\\\') + ')'
     (content, n) = re.subn('^\s*<(https://bitcoincore.org/bin/bitcoin-core-.*?/)>\s*$', newspec, content, count=1, flags=re.MULTILINE)
     if n != 1:
         print("Couldn't find download link to replace.")
