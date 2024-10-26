@@ -58,6 +58,7 @@ def parse_args():
     parser.add_argument('-p', dest='test', action='store_false', help="Run in production mode instead of test mode")
     parser.add_argument('-u', dest='update_mode', action='store_true', help="Use update mode instead of creation mode")
     parser.add_argument('-b', dest='broadcast', action='store_true', help="Broadcast to relays")
+    parser.add_argument('--time-delta', type=int, help="Add time delta to event")
     parser.add_argument('source', help="Jekyll markdown file to source from")
 
     return parser.parse_args()
@@ -82,9 +83,11 @@ def main():
         content = '# TEST\n\n' + content
 
     # replace download links
-    newspec = '- 🌐 <\\1>\n' + \
-              '- 🧲 [Magnet link](' + metadata['optional_magnetlink'].replace('\\', '\\\\') + ')'
-    (content, n) = re.subn('^\s*<(https://bitcoincore.org/bin/bitcoin-core-.*?/)>\s*$', newspec, content, count=1, flags=re.MULTILINE)
+    newspec = ('- 🌐 <\\1>\n' +
+               '- 🧲 <' + metadata['optional_magnetlink'].replace('\\', '\\\\') + '>')
+    #newspec = ('- 🌐 <\\1>\n' +
+    #           '- 🧲 [Magnet link](' + metadata['optional_magnetlink'].replace('\\', '\\\\') + ')')
+    (content, n) = re.subn(r'^ *<(https://bitcoincore.org/bin/bitcoin-core-.*?/)> *$', newspec, content, count=1, flags=re.MULTILINE)
     if n != 1:
         print("Couldn't find download link to replace.")
         exit(1)
@@ -115,6 +118,8 @@ def main():
     # current date for the event instead of the release date.
     if args.update_mode:
         event['created_at'] = int(time.time())
+    if args.time_delta is not None:
+        event['created_at'] += args.time_delta
 
     key.sign_event(event)
     print('event size is', len(json.dumps(event)))
