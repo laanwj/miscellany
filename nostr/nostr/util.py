@@ -64,7 +64,7 @@ def embeds_to_tags(content):
         elif hrp == 'npub':
             if len(data) != 32:
                 continue
-            tags.append(['p', data[:-1].hex()])
+            tags.append(['p', data.hex()])
         elif hrp == 'nevent': # create mention
             tlv = parse_tlv(data)
             if tlv is None or 0x00 not in tlv or len(tlv[0x00][0]) != 32:
