@@ -35,6 +35,7 @@ def encode_tlv(hrp, tlv):
     converted_bits = bech32.convertbits(data, 8, 5)
     return bech32.bech32_encode(hrp, converted_bits, bech32.Encoding.BECH32)
 
+# TODO: implement in terms of decode()
 def embeds_to_tags(content):
     '''
     Returns 'p' tags for embedded user profiles, and a set of relays extracted
@@ -124,6 +125,37 @@ def encode_naddr(h, relays=[], author=None, kind=None):
         tlv[3] = [struct.pack('>I', kind)]
     return encode_tlv("naddr", tlv)
 
+def decode(embed):
+    rv = {}
+    (hrp, data, spec) = bech32.bech32_decode(embed, 1000)
+    if hrp is None or data is None or spec is None:
+        raise ValueError('not valid bech32')
+    rv['hrp'] = hrp
+    data = bytes(bech32.convertbits(data, 5, 8, False))
+
+    if hrp == 'nprofile':
+        tlv = parse_tlv(data)
+        if tlv is None or 0x00 not in tlv or len(tlv[0x00][0]) != 32:
+            raise ValueError('no valid tlv, no key, or invalid-length key')
+        rv['pubkey'] = tlv[0x00][0]
+        rv['relays'] = [relay.decode('utf8') for relay in tlv.get(0x01, [])]
+    elif hrp == 'npub':
+        if len(data) != 32:
+            raise ValueError('invalid npub data length')
+        rv['pubkey'] = data
+    elif hrp == 'nevent': # create mention
+        tlv = parse_tlv(data)
+        if tlv is None or 0x00 not in tlv or len(tlv[0x00][0]) != 32:
+            raise ValueError('no valid tlv, no key, or invalid-length key')
+        rv['id'] = tlv[0x00][0]
+        rv['relays'] = [relay.decode('utf8') for relay in tlv.get(0x01, [])]
+        if 0x02 in tlv:
+            rv['pubkey'] = tlv[0x02][0]
+    else:
+        raise ValueError(f'invalid hrp {hrp}')
+
+    return rv
+
 def find_tag(event, tag, idx):
     n = 0
     for e in event['tags']:
@@ -142,3 +174,6 @@ if __name__ == '__main__':
     print(encode_npub('b7b4ee1454af66f017ef672cce681f37bafaee57ab1b899acc40176b2b537816'))
     print(encode_nprofile('b7b4ee1454af66f017ef672cce681f37bafaee57ab1b899acc40176b2b537816', relays=['wss://nostr.x0f.org']))
     print(encode_naddr('en-release-28.0', relays=['wss://nostr.x0f.org'], author='b7b4ee1454af66f017ef672cce681f37bafaee57ab1b899acc40176b2b537816', kind=30023))
+    print(decode('nprofile1qqsq4gu7tthengqq577mpdyezkxf90z25g8mvkf355ks2k67km0lwwqpzdmhxue69uhkummnw3ezu7psvchx7un8zn5kcn'))
+    print(decode('npub1p23eukh0nxsqpfaakz6fj9vvj27y4gs0kevnrffdq4d4adkl7uuq7crnl6'))
+    print(decode('nevent1qqsr46hsp2e8fl4whjdxfhp2knnzjj088wmu3vh8x50xwaaercftckqhhvjk2'))
