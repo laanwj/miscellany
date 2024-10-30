@@ -35,7 +35,6 @@ def encode_tlv(hrp, tlv):
     converted_bits = bech32.convertbits(data, 8, 5)
     return bech32.bech32_encode(hrp, converted_bits, bech32.Encoding.BECH32)
 
-# TODO: implement in terms of decode()
 def embeds_to_tags(content):
     '''
     Returns 'p' tags for embedded user profiles, and a set of relays extracted
@@ -45,49 +44,35 @@ def embeds_to_tags(content):
     relays_out = set()
     for match in EMBED_RE.finditer(content):
         embed = match.group(1)
-        (hrp, data, spec) = bech32.bech32_decode(embed, 1000)
-        if hrp is None or data is None or spec is None:
-            continue # no valid bech32
-        data = bytes(bech32.convertbits(data, 5, 8, False))
+        try:
+            rec = decode(embed)
+        except ValueError: # invalid embed, just move on
+            continue
 
-        if hrp == 'nprofile':
-            tlv = parse_tlv(data)
-            if tlv is None or 0x00 not in tlv or len(tlv[0x00][0]) != 32:
-                continue # no valid tlv, no key, or invalid-length key
-            key = tlv[0x00][0].hex()
-            relays = [relay.decode('utf8') for relay in tlv.get(0x01, [])]
+        pubkey = rec.get('pubkey', None)
+        event_id = rec.get('event_id', None)
+        relays = rec.get('relays', [])
+
+        if pubkey is not None:
             if relays: # if relay supplied, specify the first one
-                tags.append(['p', key, relays[0]])
+                tags.append(['p', pubkey.hex(), relays[0]])
             else: # no relay supplied
-                tags.append(['p', key])
+                tags.append(['p', pubkey.hex()])
 
-            relays_out.update(relays)
-        elif hrp == 'npub':
-            if len(data) != 32:
-                continue
-            tags.append(['p', data.hex()])
-        elif hrp == 'nevent': # create mention
-            tlv = parse_tlv(data)
-            if tlv is None or 0x00 not in tlv or len(tlv[0x00][0]) != 32:
-                continue # no valid tlv, no key, or invalid-length key
-            evtid = tlv[0x00][0].hex()
-            relays = [relay.decode('utf8') for relay in tlv.get(0x01, [])]
+        if event_id is not None: # create mention
+            marker = 'mention'
+
             if len(relays) >= 1:
                 relay = relays[0]
             else:
                 relay = ''
-            marker = 'mention'
-            if 0x02 in tlv:
-                author = tlv[0x02][0].hex()
-            else:
-                author = None
 
-            if author:
-                tags.append(['e', evtid, relay, marker, author])
+            if pubkey:
+                tags.append(['e', event_id.hex(), relay, marker, pubkey.hex()])
             else:
-                tags.append(['e', evtid, relay, marker])
+                tags.append(['e', event_id.hex(), relay, marker])
 
-            relays_out.update(relays)
+        relays_out.update(relays)
 
     return tags, relays_out
 
@@ -147,7 +132,7 @@ def decode(embed):
         tlv = parse_tlv(data)
         if tlv is None or 0x00 not in tlv or len(tlv[0x00][0]) != 32:
             raise ValueError('no valid tlv, no key, or invalid-length key')
-        rv['id'] = tlv[0x00][0]
+        rv['event_id'] = tlv[0x00][0]
         rv['relays'] = [relay.decode('utf8') for relay in tlv.get(0x01, [])]
         if 0x02 in tlv:
             rv['pubkey'] = tlv[0x02][0]
