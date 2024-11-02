@@ -111,6 +111,9 @@ def encode_naddr(h, relays=[], author=None, kind=None):
     return encode_tlv("naddr", tlv)
 
 def decode(embed):
+    '''
+    Decode public, non-deprecated NIP-19 data types.
+    '''
     rv = {}
     (hrp, data, spec) = bech32.bech32_decode(embed, 1000)
     if hrp is None or data is None or spec is None:
@@ -128,7 +131,11 @@ def decode(embed):
         if len(data) != 32:
             raise ValueError('invalid npub data length')
         rv['pubkey'] = data
-    elif hrp == 'nevent': # create mention
+    elif hrp == 'note':
+        if len(data) != 32:
+            raise ValueError('invalid note data length')
+        rv['event_id'] = data
+    elif hrp == 'nevent':
         tlv = parse_tlv(data)
         if tlv is None or 0x00 not in tlv or len(tlv[0x00][0]) != 32:
             raise ValueError('no valid tlv, no key, or invalid-length key')
@@ -162,3 +169,4 @@ if __name__ == '__main__':
     print(decode('nprofile1qqsq4gu7tthengqq577mpdyezkxf90z25g8mvkf355ks2k67km0lwwqpzdmhxue69uhkummnw3ezu7psvchx7un8zn5kcn'))
     print(decode('npub1p23eukh0nxsqpfaakz6fj9vvj27y4gs0kevnrffdq4d4adkl7uuq7crnl6'))
     print(decode('nevent1qqsr46hsp2e8fl4whjdxfhp2knnzjj088wmu3vh8x50xwaaercftckqhhvjk2'))
+    print(decode('note10gvceh72dtwe9g2zscfmr6v75va9hd55uv8207g3g3ywknjaqrqs8rtr5w') == {'hrp': 'note', 'event_id': bytes.fromhex('7a198cdfca6add92a1428613b1e99ea33a5bb694e30ea7f9114448eb4e5d00c1')})
