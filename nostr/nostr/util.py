@@ -157,16 +157,3 @@ def find_tag(event, tag, idx):
             else:
                 n += 1
     return None
-
-if __name__ == '__main__':
-    print(embeds_to_tags('[test] Merged PR from laanwj (nostr:nprofile1qqsq4gu7tthengqq577mpdyezkxf90z25g8mvkf355ks2k67km0lwwqpzdmhxue69uhkummnw3ezu7psvchx7un8zn5kcn nostr:npub1p23eukh0nxsqpfaakz6fj9vvj27y4gs0kevnrffdq4d4adkl7uuq7crnl6): pr2 https://github.com/laanwj/test/pull/2'))
-    print(embeds_to_tags('[test] Merged PR from laanwj (nostr:nprofile1qqsq4gu7tthengqq577mpdyezkxf90z25g8mvkf355ks2k67km0lwwqpz3mhxue69uhhyetvv9ujuerpd46hxtnfdur2ev7c): pr5 https://github.com/laanwj/test/pull/5'))
-    print(embeds_to_tags('<nostr:nevent1qqsx4e0dsr3srcf0k45pgryhvdgu47wld0f7ylg5lg3tqfs7snmfs9cpzdmhxue69uhkummnw3ezu7psvchx7un8qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hsz9thwden5te0wp6hyurvv4ex2mrp0yhxxmmd35rvfv>'))
-    print(encode_nevent('6ae5ed80e301e12fb568140c976351caf9df6bd3e27d14fa22b0261e84f69817', ['wss://nostr.x0f.org'], 'b7b4ee1454af66f017ef672cce681f37bafaee57ab1b899acc40176b2b537816', 1))
-    print(encode_npub('b7b4ee1454af66f017ef672cce681f37bafaee57ab1b899acc40176b2b537816'))
-    print(encode_nprofile('b7b4ee1454af66f017ef672cce681f37bafaee57ab1b899acc40176b2b537816', relays=['wss://nostr.x0f.org']))
-    print(encode_naddr('en-release-28.0', relays=['wss://nostr.x0f.org'], author='b7b4ee1454af66f017ef672cce681f37bafaee57ab1b899acc40176b2b537816', kind=30023))
-    print(decode('nprofile1qqsq4gu7tthengqq577mpdyezkxf90z25g8mvkf355ks2k67km0lwwqpzdmhxue69uhkummnw3ezu7psvchx7un8zn5kcn'))
-    print(decode('npub1p23eukh0nxsqpfaakz6fj9vvj27y4gs0kevnrffdq4d4adkl7uuq7crnl6'))
-    print(decode('nevent1qqsr46hsp2e8fl4whjdxfhp2knnzjj088wmu3vh8x50xwaaercftckqhhvjk2'))
-    print(decode('note10gvceh72dtwe9g2zscfmr6v75va9hd55uv8207g3g3ywknjaqrqs8rtr5w') == {'hrp': 'note', 'event_id': bytes.fromhex('7a198cdfca6add92a1428613b1e99ea33a5bb694e30ea7f9114448eb4e5d00c1')})
