@@ -40,7 +40,7 @@ def embeds_to_tags(content):
     Returns 'p' tags for embedded user profiles, and a set of relays extracted
     from nprofiles.
     '''
-    tags = []
+    tags = {}
     relays_out = set()
     for match in EMBED_RE.finditer(content):
         embed = match.group(1)
@@ -55,9 +55,9 @@ def embeds_to_tags(content):
 
         if pubkey is not None:
             if relays: # if relay supplied, specify the first one
-                tags.append(['p', pubkey.hex(), relays[0]])
-            else: # no relay supplied
-                tags.append(['p', pubkey.hex()])
+                tags[('p', pubkey.hex())] = [relays[0]]
+            elif ('p', pubkey.hex()) not in tags: # no relay supplied; avoid replacing if we already have a better tag
+                tags[('p', pubkey.hex())] = []
 
         if event_id is not None: # create mention
             marker = 'mention'
@@ -68,12 +68,13 @@ def embeds_to_tags(content):
                 relay = ''
 
             if pubkey:
-                tags.append(['e', event_id.hex(), relay, marker, pubkey.hex()])
-            else:
-                tags.append(['e', event_id.hex(), relay, marker])
+                tags[('e', event_id.hex())] = [relay, marker, pubkey.hex()]
+            elif ('e', event_id.hex()) not in tags: # no pubkey supplied
+                tags[('e', event_id.hex())] = [relay, marker]
 
         relays_out.update(relays)
 
+    tags = [list(key) + value for key,value in tags.items()]
     return tags, relays_out
 
 def encode_npub(pubkey):
