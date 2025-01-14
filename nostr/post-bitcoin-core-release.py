@@ -87,7 +87,7 @@ def main():
                '- 🧲 <' + metadata['optional_magnetlink'].replace('\\', '\\\\') + '>')
     #newspec = ('- 🌐 <\\1>\n' +
     #           '- 🧲 [Magnet link](' + metadata['optional_magnetlink'].replace('\\', '\\\\') + ')')
-    (content, n) = re.subn(r'^ *<(https://bitcoincore.org/bin/bitcoin-core-.*?/)> *$', newspec, content, count=1, flags=re.MULTILINE)
+    (content, n) = re.subn(r'^ *<(https://bitcoincore.org/bin/bitcoin-core-.*?)> *$', newspec, content, count=1, flags=re.MULTILINE)
     if n != 1:
         print("Couldn't find download link to replace.")
         exit(1)
